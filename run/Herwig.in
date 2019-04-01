@@ -1,0 +1,144 @@
+
+## =========================================
+## Global Pre-Commands from Herwig7Config.py
+## =========================================
+
+## fix for global default settings until released with Herwig7 itself
+set /Herwig/Shower/GtoQQbarSplitFn:AngularOrdered Yes
+set /Herwig/Shower/GammatoQQbarSplitFn:AngularOrdered Yes
+
+## fix for GeV-mass photon radiation until released with Herwig7 itself
+set /Herwig/Shower/GammatoQQbarSudakov:Alpha /Herwig/Shower/AlphaQED
+
+## fix for initial-state (backward evolution) splitting (AGENE-1384)
+set /Herwig/Shower/QtoGammaQSudakov:Alpha /Herwig/Shower/AlphaQED
+
+## fix for QED lepton radiation scale (ATLMCPROD-5138)
+set /Herwig/Shower/LtoLGammaSudakov:pTmin 0.000001
+
+## ensure JetFinder uses AntiKt with R=0.4
+set /Herwig/Cuts/JetFinder:Variant AntiKt
+set /Herwig/Cuts/JetFinder:ConeRadius 0.4
+
+## ============================================
+## Local Pre-Commands from Herwig7ConfigLHEF.py
+## ============================================
+
+# > no local pre-commands at the moment
+
+## ================
+## Default Commands
+## ================
+
+## Commands for proton-proton collisions
+read snippets/PPCollider.in
+
+## Random number generator seed
+set /Herwig/Random:Seed 123456
+
+## Verbosity and printout settings
+set /Herwig/Generators/EventGenerator:DebugLevel 1
+set /Herwig/Generators/EventGenerator:PrintEvent 2
+set /Herwig/Generators/EventGenerator:UseStdout Yes
+set /Herwig/Generators/EventGenerator:NumberOfEvents 1000000000
+set /Herwig/Generators/EventGenerator:MaxErrors 1000000
+
+## Make sampler print out cross sections for each subprocess
+set /Herwig/Samplers/Sampler:Verbose Yes
+
+## Masses and widths: PDG 2010 values (except TOP mass; kept at PDG2007)
+set /Herwig/Particles/t:NominalMass 172.5*GeV
+set /Herwig/Particles/tbar:NominalMass 172.5*GeV
+set /Herwig/Particles/W+:NominalMass 80.399*GeV
+set /Herwig/Particles/W-:NominalMass 80.399*GeV
+set /Herwig/Particles/Z0:NominalMass 91.1876*GeV
+set /Herwig/Particles/W+:Width 2.085*GeV
+set /Herwig/Particles/W-:Width 2.085*GeV
+set /Herwig/Particles/Z0:Width 2.4952*GeV
+
+## Weinberg angle
+set /Herwig/Model:EW/Sin2ThetaW 0.23113
+
+## Disable default attempts to use Pomeron PDF data files, until we're worked how to do that on the Grid!
+set /Herwig/Particles/pomeron:PDF /Herwig/Partons/NoPDF
+
+## Set long-lived particles stable
+set /Herwig/Decays/DecayHandler:MaxLifeTime 10*mm
+
+# Turn off intermediate photons inserted explicitly into the event record with an incorrect life length in the pi0 -> e+e-e+e- decay mode 
+# This is the default from H++ 2.6.1
+set /Herwig/Decays/PScalar4f:GenerateIntermediates 0
+
+## ========================
+## Commands from jobOptions
+## ========================
+
+## Configure NLO PDF set for the hard process
+set /Herwig/Partons/HardNLOPDF:PDFName PDF4LHC15_nlo_30_pdfas
+set /Herwig/Partons/HardNLOPDF:Member 0
+set /Herwig/Partons/HardNLOPDF:MaxFlav 5
+set /Herwig/Partons/HardNLOPDF:RemnantHandler /Herwig/Partons/HadronRemnants
+set /Herwig/Particles/p+:PDF /Herwig/Partons/HardNLOPDF
+set /Herwig/Particles/pbar-:PDF /Herwig/Partons/HardNLOPDF
+set /Herwig/Partons/PPExtractor:FirstPDF  /Herwig/Partons/HardNLOPDF
+set /Herwig/Partons/PPExtractor:SecondPDF /Herwig/Partons/HardNLOPDF
+
+## Parton shower / hadronization tune settings
+
+# > The parton shower / hadronization tune "H7-MMHT2014LO" is already
+# > configured in Herwig7 via the default settings.
+
+## Underlying event tune settings
+
+# > The underlying event tune "H7-UE-MMHT" is already
+# > configured in Herwig7 via the default settings.
+
+## ----------------------------
+## Read in Events from LHE File
+## ----------------------------
+
+## Create the Handler and Reader
+library LesHouches.so
+create ThePEG::LesHouchesFileReader /Herwig/EventHandlers/LHEReader
+create ThePEG::LesHouchesEventHandler /Herwig/EventHandlers/LHEHandler
+
+## Set LHE filename
+set /Herwig/EventHandlers/LHEReader:FileName BVI.172.5.0.03.25000-17476900_559260800-cf1.lhe.events
+
+## Setup LHE event handler and LHE reader
+set /Herwig/Generators/EventGenerator:EventHandler /Herwig/EventHandlers/LHEHandler
+insert /Herwig/EventHandlers/LHEHandler:LesHouchesReaders 0 /Herwig/EventHandlers/LHEReader
+set /Herwig/EventHandlers/LHEHandler:PartonExtractor /Herwig/Partons/PPExtractor
+set /Herwig/EventHandlers/LHEHandler:CascadeHandler /Herwig/Shower/ShowerHandler
+set /Herwig/EventHandlers/LHEHandler:HadronizationHandler /Herwig/Hadronization/ClusterHadHandler
+set /Herwig/EventHandlers/LHEHandler:DecayHandler /Herwig/Decays/DecayHandler
+set /Herwig/EventHandlers/LHEHandler:WeightNormalization CrossSection
+set /Herwig/EventHandlers/LHEHandler:WeightOption VarNegWeight
+set /Herwig/EventHandlers/LHEReader:IncludeSpin Yes
+set /Herwig/EventHandlers/LHEReader:MomentumTreatment RescaleEnergy
+set /Herwig/EventHandlers/LHEReader:AllowedToReOpen No
+
+## Parton shower settings
+set /Herwig/Shower/ShowerHandler:MaxPtIsMuF Yes
+set /Herwig/Shower/ShowerHandler:RestrictPhasespace Yes
+# treatment of wide angle radiation
+set /Herwig/Shower/PartnerFinder:PartnerMethod Random
+set /Herwig/Shower/PartnerFinder:ScaleChoice Partner
+
+## Don't use any cuts on LHE files
+create ThePEG::Cuts /Herwig/Cuts/NoCuts
+set /Herwig/EventHandlers/LHEReader:Cuts /Herwig/Cuts/NoCuts
+
+
+## Set the PDF for the LHE reader
+# set /Herwig/EventHandlers/LHEReader:PDFA /Herwig/Partons/HardNLOPDF
+# set /Herwig/EventHandlers/LHEReader:PDFB /Herwig/Partons/HardNLOPDF
+
+
+set /Herwig/Generators/EventGenerator:NumberOfEvents 10
+
+## =============================================
+## Local Post-Commands from Herwig7ConfigLHEF.py
+## =============================================
+
+saverun Herwig /Herwig/Generators/EventGenerator

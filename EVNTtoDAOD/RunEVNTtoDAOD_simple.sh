@@ -1,0 +1,1 @@
+pathena --site=INFN-LECCE --trf="Reco_tf.py  --inputEVNTFile=%IN  --outputDAODFile=EXT0.myaod.pool.root --reductionConf=TRUTH1 --ignoreErrors=True" --inDS=user.lscyboz.899999.H7_MG-OL_tt_AO_MCatNLO_UE_MMHT2014__13TeV_Herwig_172p5_EXT0 --outDS=user.lscyboz.899999.H7_MG-OL_tt_AO_MCatNLO_UE_MMHT2014_13TeV_Herwig_172p5_x5 --split 50 --nFilesPerJob=4 
