@@ -1,0 +1,63 @@
+#!/bin/bash -l
+
+#SBATCH -J draco-s1-p1-x1
+#SBATCH -o ./qsub/out/mppui_ttbar_%j.out
+#SBATCH -e ./qsub/out/mppui_ttbar_%j.err
+#SBATCH -D ./
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=scyboz@mpp.mpg.de
+#SBATCH --mem=3700
+#SBATCH --time=24:00:00
+#SBATCH --partition=standard
+##SBATCH --nodes=2
+##SBATCH --ntasks-per-node=32
+#SBATCH --dependency=
+
+#---- Powheg settings for run ----#
+#NODES=2
+#PRG=../pwhg_main
+#STARTSEED=1
+#LOGFILE='run-draco-s1-p1-x1'
+#DATASET='SET'
+FILE=bb4l-powhegpwgevents._00001.lhe.events
+TOPMASS=mt171p0
+DATASET=$PWD/../lhefiles/bb4l/$TOPMASS/$FILE
+#---- ----------------------- ----#
+
+CURDIR=$PWD
+RUNDIR=/tmp/lscyboz/DownloadFolder/tmp-${SLURM_JOB_ID}
+mkdir -p $RUNDIR
+mkdir -p $RUNDIR/qsub/out
+cp -r MC15.999999.PowhegHerwig7_H7_UE_MMHT2014_LHE.py setup_athena.sh run.sh $RUNDIR
+
+cd $RUNDIR
+echo '>>>> where I am now (job beginning)'
+pwd
+
+source setup_athena.sh
+
+source $CURDIR/../build/atlas_build_run.sh
+export LD_LIBRARY_PATH=$CURDIR/../build/x86_64-centos7-gcc62-opt/lib/:$LD_LIBRARY_PATH
+cp $DATASET .
+
+echo '>>>> Host name:'
+hostname -f
+
+echo '>>>> Ulimit command'
+ulimit -a
+
+echo '>>>> Environmental variables'
+env
+
+echo '>>>> time now (job beginning)'
+date
+
+echo '>>>> run run.sh:'
+
+srun sh run.sh 
+
+cp output.root $CURDIR/output/$TOPMASS/$FILE.root
+
+echo '>>>> time now (job end)'
+date
+
